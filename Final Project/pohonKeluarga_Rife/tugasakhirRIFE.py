@@ -11,10 +11,11 @@ class Queue:
 		return len(self.items)
 
 class Family_Tree:
-	def __init__(self,name,depth=0):
+	def __init__(self,name,depth=0,partner=None):
 		self.name = name
 		self.children = []
 		self.depth = depth
+		self.partner = partner
 	def __repr__(self,level=0):
 		ret = "\t"*level+repr(self.name)+"\n"
 		for child in self.children:
@@ -27,12 +28,18 @@ class Family_Tree:
 			current = Q.dequeue()
 			if current.name == name:
 				break
+			else:
+				if current.partner != None and current.partner.name == name:
+					break
 			for child in current.children:
 				Q.enqueue(child)
 		if current.name == name:
 			return current
 		else:
-			return None
+			if current.partner != None and current.partner.name == name:
+				return current.partner
+			else:
+				return None
 	def newChild(self,parent,childName):
 		parent = self.searchFamily(parent)
 		child = self.searchFamily(childName)
@@ -42,6 +49,14 @@ class Family_Tree:
 			print 'there are no such parent'
 			print 'or'
 			print 'parent are already had',childName
+	def marry(self,name1,name2):
+		name1 = self.searchFamily(name1)
+		if name1 != None:
+			name2 = Family_Tree(name2,name1.depth,name1)
+			name2.children = name1.children
+			name1.partner = name2
+		else:
+			print 'there is no',name1,'in family tree'
 	def relationshipBetween(self,name1,name2):
 		name1 = self.searchFamily(name1)
 		name2 = self.searchFamily(name2)
@@ -78,9 +93,11 @@ happyFamily.newChild('bima','haram') # creating child for bima
 happyFamily.newChild('sani','budi') # creating child for sani
 happyFamily.newChild('sani','momon') # creating child for sani
 happyFamily.newChild('sani','maman') # creating child for sani 
+happyFamily.newChild('sani','maman') # example of creating child that already had
+happyFamily.marry('sani','handsome') # sani marrying handsome
 
 #printing family tree
-print 'the happy family tree'.upper()
+print '\nthe happy family tree'.upper()
 print happyFamily
 
 # testing function
@@ -93,3 +110,6 @@ happyFamily.relationshipBetween('haram','joko') # example of grandchild
 happyFamily.relationshipBetween('boko','bima') # example of child
 happyFamily.relationshipBetween('maman','bima') # example of nephew
 happyFamily.relationshipBetween('bima','budi') # example of uncle
+happyFamily.relationshipBetween('handsome','budi') # result of married yielding handsome to be the parent of budi 
+happyFamily.relationshipBetween('enki','rizkiyana') # example of wrong input
+happyFamily.relationshipBetween('isa','fadhil') #example of wrong input
