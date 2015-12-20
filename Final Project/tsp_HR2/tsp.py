@@ -1,108 +1,123 @@
 class Graph:
 	def __init__(self,numVertices):
 		self.num = numVertices
-		self.matrix = [[None for x in range(self.num)] for y in range(self.num)]
-		self.stat = [[None for x in range(self.num)] for y in range(self.num)]
+		self.mtr = \
+			[ \
+				[None for x in range(self.num)] \
+					for y in range(self.num) \
+			]
+		self.sts = \
+			[ \
+				[None for x in range(self.num)] \
+					for y in range(self.num) \
+			]
 		self.tsp = {}
 
-	def add(self,src,dest,weight=0):
-		if src != dest:
-			self.matrix[src][dest] = weight
-			self.matrix[dest][src] = weight
-			self.stat[src][dest] = weight
-			self.stat[dest][src] = weight
+	def add(self, src, des, weight=0):
+		if src != des:
+			self.mtr[src][des] = weight
+			self.mtr[des][src] = weight
+			self.sts[src][des] = weight
+			self.sts[des][src] = weight
 
-	def minimBaris(self):
+	def minimRow(self):
 		for i in range(self.num):
+
+			# mencari nilai paling kecil
 			min = 9999
 			for j in range(self.num):
-				elm = self.matrix[i][j]
-				if elm is not None and elm < min:
-					min = elm
-			for j in range(self.num):
-				if self.matrix[i][j] is not None:
-					self.matrix[i][j] -= min
-			
-			# print self.matrix[i]
+				if self.mtr[i][j] is not None and self.mtr[i][j] < min:
+					min = self.mtr[i][j]
 
-	def minimKolom(self):
+			# kurangkan semuanya dengan nilai terkecil
+			for j in range(self.num):
+				if self.mtr[i][j] is not None:
+					self.mtr[i][j] -= min
+
+	def miniCollum(self):
 		for j in range(self.num):
+
+			# mencari nilai paling kecil
 			min = 9999
 			for i in range(self.num):
-				elm = self.matrix[i][j]
-				if elm is not None and elm < min:
-					min = elm
+				if self.mtr[i][j] is not None and self.mtr[i][j] < min:
+					min = self.mtr[i][j]
+
+			# kurangkan semuanya dengan nilai terkecil
 			for i in range(self.num):
-				if self.matrix[i][j] is not None:
-					self.matrix[i][j] -= min
+				if self.mtr[i][j] is not None:
+					self.mtr[i][j] -= min
 
-		# for elm in self.matrix:
-		# 	print elm
-
-	def pinalti(self):
-		num = self.num
+	def penalty(self):
 		max = 0
 		i = 0
 		j = 0
 
-		# for elm in self.matrix:
-		# 	print elm
+		# menghitung pinalti, sekalian mencari yg maks
+		for x in range(self.num):
+			for y in range(self.num):
+				if self.mtr[x][y] == 0:
 
-		for x in range(num):
-			for y in range(num):
-				if self.matrix[x][y] == 0:
+					# mencari nilai minimal baris
 					minx = 9999
-					miny = 9999
-					for m in range(num):
-						val = self.matrix[m][y]
-						if minx > val and m != x:
-							if val is not None:
-								minx = val
+					for m in range(self.num):
+						if m != x:
+							if self.mtr[m][y] is not None:
+								if minx > self.mtr[m][y]:
+									minx = self.mtr[m][y]
 
-					for n in range(num):
-						val = self.matrix[x][n]
-						if miny > val and n != y:
-							if val is not None:
-								miny = val
+					# mencari nilai minimal kolom
+					miny = 9999
+					for n in range(self.num):
+						if n != y:
+							if self.mtr[x][n] is not None:
+								if miny > self.mtr[x][n]:
+									miny = self.mtr[x][n]
 
 					if max <= minx + miny:
 						max = miny + minx
 						i = x
 						j = y
-
-		self.matrix[j][i] = None
+		
+		# menyimpan direction ke self.tsp
 		self.tsp[i] = j
-		for x in range(num):
-			self.matrix[x][j] = None
-		for y in range(num):
-			self.matrix[i][y] = None
 
-		# for elm in self.matrix:
-		# 	print elm
+		# eliminasi pinalti yang telah dipilih
+			# menghapus baris dan kolom
+		for x in range(self.num):
+			self.mtr[x][j] = None
+		for y in range(self.num):
+			self.mtr[i][y] = None
+
+			# hapus direction yang berlawanan
+		self.mtr[j][i] = None
 
 	def generateTSP(self):
+
 		for count in range(self.num-2):
-			self.minimBaris()
-			self.minimKolom()
-			self.pinalti()
+			self.minimRow()
+			self.miniCollum()
+			self.penalty()
 
 		i = []
 		j = []
 
+		tmp = []
 		for x in range(self.num):
 			if x not in self.tsp:
 				i.append(x)
 
-		tmp = []
 		for x in self.tsp:
 			tmp.append(self.tsp[x])
-		for x in range(self.num):
-			if x not in tmp:
-				j.append(x)
+		for y in range(self.num):
+			if y not in tmp:
+				j.append(y)
 
-		if self.matrix[i[0]][j[0]] is not None and self.matrix[i[1]][j[1]] is not None:
-				self.tsp[i[0]] = j[0]
-				self.tsp[i[1]] = j[1]
+		if self.mtr[i[0]][j[0]] is not None \
+			and \
+		   self.mtr[i[1]][j[1]] is not None :
+		   self.tsp[i[0]] = j[0]
+		   self.tsp[i[1]] = j[1]
 		else:
 			self.tsp[i[0]] = j[1]
 			self.tsp[i[1]] = j[0]
@@ -111,18 +126,20 @@ class Graph:
 	def showTSP(self,src):
 		frm = src
 		cost = 0
+
 		print frm,
 		while True:
-			print ' --> ', self.tsp[frm],
-			cost += self.stat[frm][self.tsp[frm]]
+			wet = self.sts[frm][self.tsp[frm]]
+			print '--> ', self.tsp[frm],
+			cost += wet
 			frm = self.tsp[frm]
 			if (frm == src):
 				break
-		print ''
+		print
 		print cost
 
 	def showGraph(self):
-		for elm in self.stat:
+		for elm in self.mtr:
 			for el in elm:
 				if el is None:
 					print el, "\t",
