@@ -2,14 +2,14 @@ import random
 def fangsi(val):
     x=val[0]
     y=val[1]
-    a = 0.0000000000001 #mencegah pembagian nol
-    GEDE = 9999999
+    # a = 0.0000000000001 #mencegah pembagian nol
     # fungsi minimasi bukat 1/h-a
     h = ((x+(2*y)-7)*(x+(2*y)-7)) + ((((2*x)+y-5))*(((2*x)+y-5)))
-    return GEDE - h
+    return h
 
 def fitness(individu):
-    return fangsi(genotofeno(individu))
+    GEDE = 9999999
+    return GEDE - fangsi(genotofeno(individu))
 
 
 def decode(code):
@@ -50,7 +50,9 @@ def randomindv(panjangkromosom):
 def ranpopul(jumlahindividu,panjangkromosom):
     a = []
     for i in range(0,jumlahindividu):
-        a += [randomindv(panjangkromosom)]
+        rando = randomindv(panjangkromosom)
+        a += [[rando,fitness(rando)]]
+
     return a
 
 # def rodaputar(popul):
@@ -61,19 +63,20 @@ def ranpopul(jumlahindividu,panjangkromosom):
 
 
 def listprobabi(popul):
-    #mengembalikan list probabilitas kumulatif
     fitns = [fitness(p) for p in popul]
     totft = float(sum(fitns))
     prob = [f/totft for f in fitns]
     return [sum(prob[:i+1]) for i in range(len(prob))]
 
-def rodaputar(popul,probs,n):
+def rodaputar(popula,n):
+    popul = [a[0] for a in popula]
     terpilih = []
     for nn in xrange(n):
-        r = random.random()
-        for (i,indv) in enumerate(popul):
+    	probs = listprobabi(popul)
+        r = random.uniform(0,1)
+        for i in xrange(len(popul)):
             if r <= probs[i]:
-                terpilih.append(indv)
+                terpilih.append(popul.pop(i))
                 break
 
     return terpilih
@@ -96,34 +99,41 @@ def mutasi(individu):
             if (iv == "1"):
                 hasilmutasi += "0"
         else:
-            hasilmutasi += iv
-    return hasilmutasi
+        	hasilmutasi += iv
+    return [hasilmutasi,fitness(hasilmutasi)]
+
+def terbaik(popo,nelitisme):
+	dabes = []
+	popo = sorted(popo,key=lambda x:x[1],reverse = True)
+	return popo[:nelitisme]
+			
+
 
 kromo = 10
-pop = 10 #banyaknya populasi
+pop = 50 #banyaknya populasi
 loop = 100 #jumlah perulangan
+nelitisme = 2
 popo = ranpopul(pop,kromo)
-
+popo += terbaik(popo,nelitisme)
 # for i in popo:
 #     print genotofeno(i),"   |",fitness(i)
 
 
-
-print [(t) for t in popo]
 i = 0
 while i<loop:
-    ortu = rodaputar(popo,listprobabi(popo),pop);
+    ortu = rodaputar(popo,pop)
     anakanak = []
     for j in range(0,pop/2):
         anakanak += crossover(ortu[2*j],ortu[2*j+1])
     mutan = [mutasi(mut) for mut in anakanak]
-    popo = mutan
-    fitneses = [decode(p) for p in popo]
-    print "generasi ke ",i
-    for individu in popo:
-        print genotofeno(individu)
-    i += 1
+    popo = terbaik(popo,nelitisme) + mutan
 
+    fitneses = [decode(p)  for p in popo]
+    print "generasi ke ",i
+    print "fitness elitism : ",popo[0][1]
+    for j in range(nelitisme):
+    	print genotofeno(popo[j][0]), "nilai fungsi", fangsi(genotofeno(popo[j][0]))
+    i += 1
 
 # daftar kekurangan
 # 1. yang dicari bukan minimum tapi malah maximum (solved dengan menambah konstanta yang besar pada fungsi fitness)
